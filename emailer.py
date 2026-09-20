@@ -13,7 +13,7 @@ def send_gmail_pdf(pdf_path):
     
     # 1. Create the email message
     msg = EmailMessage()
-    msg['Subject'] = 'Your Generated PDF Report'
+    msg['Subject'] = 'Your Generated PDF Set List'
     msg['From'] = my_gmail
     msg['To'] = my_gmail
     msg.set_content('Hello! Please find your Song Set List attached to this email.')
