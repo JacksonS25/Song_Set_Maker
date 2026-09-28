@@ -3,7 +3,7 @@ import smtplib
 import mimetypes
 from email.message import EmailMessage
 
-def send_gmail_pdf(pdf_path):
+def send_gmail_pdf(pdf_output, email_address, pdf_filename):
     # --- CONFIGURATION ---
     # Put your real Gmail address here
     my_gmail = os.getenv("EMAIL_ADDRESS")
@@ -14,16 +14,16 @@ def send_gmail_pdf(pdf_path):
     msg = EmailMessage()
     msg['Subject'] = 'Your Generated PDF Set List'
     msg['From'] = my_gmail
-    msg['To'] = my_gmail
+    msg['To'] = email_address
     msg.set_content('Hello! Please find your Song Set List attached to this email.')
 
     # 2. Find and read the PDF file
-    mime_type, _ = mimetypes.guess_type(pdf_path)
+    mime_type, _ = mimetypes.guess_type(pdf_filename)
     main_type, sub_type = mime_type.split('/', 1)
 
-    with open(pdf_path, 'rb') as file:
-        file_data = file.read()
-        file_name = os.path.basename(pdf_path)
+    pdf_output.seek(0)  # Go to the start of the BytesIO buffer
+    file_data = pdf_output.read()
+    file_name = pdf_filename
         
     # 3. Attach the PDF
     msg.add_attachment(
