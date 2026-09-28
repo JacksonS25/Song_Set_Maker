@@ -2,15 +2,14 @@ import os
 import smtplib
 import mimetypes
 from email.message import EmailMessage
-from user import email, password
 
 def send_gmail_pdf(pdf_path):
     # --- CONFIGURATION ---
     # Put your real Gmail address here
-    my_gmail = email
+    my_gmail = os.getenv("EMAIL_ADDRESS")
     # Paste your 16-character App Password here
-    app_password = password
-    
+    app_password = os.getenv("APP_PASSWORD")
+
     # 1. Create the email message
     msg = EmailMessage()
     msg['Subject'] = 'Your Generated PDF Set List'
