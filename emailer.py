@@ -17,10 +17,7 @@ def send_gmail_pdf(pdf_output, email_address, pdf_filename):
     msg['To'] = email_address
     msg.set_content('Hello! Please find your Song Set List attached to this email.')
 
-    # 2. Find and read the PDF file
-    mime_type, _ = mimetypes.guess_type(pdf_filename)
-    main_type, sub_type = mime_type.split('/', 1)
-
+    # 2. Prepare the PDF attachment
     pdf_output.seek(0)  # Go to the start of the BytesIO buffer
     file_data = pdf_output.read()
     file_name = pdf_filename
@@ -28,8 +25,8 @@ def send_gmail_pdf(pdf_output, email_address, pdf_filename):
     # 3. Attach the PDF
     msg.add_attachment(
         file_data, 
-        maintype=main_type, 
-        subtype=sub_type, 
+        maintype='application', 
+        subtype='pdf', 
         filename=file_name
     )
 
