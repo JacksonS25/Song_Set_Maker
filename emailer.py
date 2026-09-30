@@ -6,14 +6,14 @@ from email.message import EmailMessage
 def send_gmail_pdf(pdf_output, email_address, pdf_filename):
     # --- CONFIGURATION ---
     # Put your real Gmail address here
-    my_gmail = os.getenv("EMAIL_ADDRESS")
+    my_email = os.getenv("EMAIL_ADDRESS")
     # Paste your 16-character App Password here
     app_password = os.getenv("APP_PASSWORD")
 
     # 1. Create the email message
     msg = EmailMessage()
     msg['Subject'] = 'Your Generated PDF Set List'
-    msg['From'] = my_gmail
+    msg['From'] = my_email
     msg['To'] = email_address
     msg.set_content('Hello! Please find your Song Set List attached to this email.')
 
@@ -32,10 +32,10 @@ def send_gmail_pdf(pdf_output, email_address, pdf_filename):
 
     # 4. Connect to Gmail and send it
     try:
-        # Gmail uses port 587 for secure connections
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
-            server.starttls() # Shakes hands securely with Gmail
-            server.login(my_gmail, app_password)
+        # Brevo uses port 587 for secure connections
+        with smtplib.SMTP("smtp-relay.brevo.com", 587) as server:
+            server.starttls() # Shakes hands securely with Brevo
+            server.login(my_email, app_password)
             server.send_message(msg)
         print("Success! The email has been sent.")
     except Exception as error:
