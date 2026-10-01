@@ -1,1 +1,2 @@
 pypdf
+mailjet-rest

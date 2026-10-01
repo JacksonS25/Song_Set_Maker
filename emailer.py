@@ -1,45 +1,47 @@
 import os
-import smtplib
-import mimetypes
-from email.message import EmailMessage
+import base64
+from mailjet_rest import Client
 
 def send_gmail_pdf(pdf_output, email_address, pdf_filename):
     # --- CONFIGURATION ---
-    # Put your real Gmail address here
-    my_email = os.getenv("EMAIL_ADDRESS")
-    # Paste your 16-character App Password here
-    app_password = os.getenv("APP_PASSWORD")
+    # Verified Gmail address on Mailjet
+    my_email = os.getenv("EMAIL_ADDRESS") 
+    # Mailjet API credentials set in Render Environment Variables
+    api_key = os.getenv("MJ_APIKEY_PUBLIC")
+    api_secret = os.getenv("MJ_APIKEY_PRIVATE")
 
-    # 1. Create the email message
-    msg = EmailMessage()
-    msg['Subject'] = 'Your Generated PDF Set List'
-    msg['From'] = my_email
-    msg['To'] = email_address
-    msg.set_content('Hello! Please find your Song Set List attached to this email.')
-
-    # 2. Prepare the PDF attachment
-    pdf_output.seek(0)  # Go to the start of the BytesIO buffer
+    # 1. Read BytesIO buffer & Base64 encode for Mailjet
+    pdf_output.seek(0)
     file_data = pdf_output.read()
-    file_name = pdf_filename
-        
-    # 3. Attach the PDF
-    msg.add_attachment(
-        file_data, 
-        maintype='application', 
-        subtype='pdf', 
-        filename=file_name
-    )
+    encoded_pdf = base64.b64encode(file_data).decode("utf-8")
 
-    # 4. Connect to Gmail and send it
+    # 2. Build the API payload
+    data = {
+        "Messages": [
+            {
+                "From": {"Email": my_email},
+                "To": [{"Email": email_address}],
+                "Subject": "Your Generated PDF Set List",
+                "TextPart": "Hello! Please find your Song Set List attached to this email.",
+                "Attachments": [
+                    {
+                        "ContentType": "application/pdf",
+                        "Filename": pdf_filename,
+                        "Base64Content": encoded_pdf
+                    }
+                ]
+            }
+        ]
+    }
+
+    # 3. Send email via HTTPS
     try:
-        # Gmail uses port 465 for secure connections
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(my_email, app_password)
-            server.send_message(msg)
-        print("Success! The email has been sent.")
+        mailjet = Client(auth=(api_key, api_secret), version="v3.1")
+        result = mailjet.send.create(data=data)
+
+        if result.status_code == 200:
+            print("Success! The email has been sent.")
+        else:
+            print(f"Mailjet error [{result.status_code}]: {result.json()}")
     except Exception as error:
         print(f"Something went wrong: {error}")
-
-# --- HOW TO USE IT ---
-# Change these lines to test your file and your destination email!
-# send_gmail_pdf("my_report.pdf", "where_to_send_it@example.com")
