@@ -33,8 +33,8 @@ def send_gmail_pdf(pdf_output, email_address, pdf_filename):
     # 4. Connect to Gmail and send it
     try:
         # Brevo uses port 587 for secure connections
-        with smtplib.SMTP("smtp-relay.brevo.com", 587) as server:
-            server.starttls() # Shakes hands securely with Brevo
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls() # Shakes hands securely with Gmail
             server.login(my_email, app_password)
             server.send_message(msg)
         print("Success! The email has been sent.")
