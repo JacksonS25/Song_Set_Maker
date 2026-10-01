@@ -10,7 +10,7 @@ def send_gmail_pdf(pdf_output, email_address, pdf_filename):
     # 1. Create the email message
     msg = EmailMessage()
     msg['Subject'] = 'Your Generated PDF Set List'
-    msg['From'] = my_email
+    msg['From'] = str(my_email).strip()
     msg['To'] = email_address
     msg.set_content('Hello! Please find your Song Set List attached to this email.')
 
@@ -30,7 +30,7 @@ def send_gmail_pdf(pdf_output, email_address, pdf_filename):
     try:
         # Gmail uses port 465 with SMTP_SSL (best for bypassing Render port blocks)
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(my_email, app_password)
+            server.login(str(my_email).strip(), str(app_password).strip())
             server.send_message(msg)
         print("Success! The email has been sent.")
     except Exception as error:
