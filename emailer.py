@@ -1,16 +1,16 @@
 import os
 import smtplib
 from email.message import EmailMessage
-
 def send_gmail_pdf(pdf_output, email_address, pdf_filename):
     # --- CONFIGURATION ---
-    my_email = os.getenv("EMAIL_ADDRESS") 
-    app_password = os.getenv("APP_PASSWORD") # Must be your 16-character Google App Password
+    api_key = os.getenv("MAILJET_API_KEY")
+    secret_key = os.getenv("MAILJET_SECRET_KEY")
+    sender_email = os.getenv("SENDER_EMAIL")
 
     # 1. Create the email message
     msg = EmailMessage()
     msg['Subject'] = 'Your Generated PDF Set List'
-    msg['From'] = str(my_email).strip()
+    msg['From'] = str(sender_email).strip()
     msg['To'] = email_address
     msg.set_content('Hello! Please find your Song Set List attached to this email.')
 
@@ -26,11 +26,11 @@ def send_gmail_pdf(pdf_output, email_address, pdf_filename):
         filename=pdf_filename
     )
 
-    # 4. Connect to Gmail and send it securely
+    # 4. Connect to Mailjet and send it securely
     try:
-        # Gmail uses port 465 with SMTP_SSL (best for bypassing Render port blocks)
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(str(my_email).strip(), str(app_password).strip())
+        # Mailjet uses port 465 with SMTP_SSL
+        with smtplib.SMTP_SSL("in-v3.mailjet.com", 465) as server:
+            server.login(str(api_key).strip(), str(secret_key).strip())
             server.send_message(msg)
         print("Success! The email has been sent.")
     except Exception as error:
