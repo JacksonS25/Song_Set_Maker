@@ -1,37 +1,69 @@
 import os
-import smtplib
-from email.message import EmailMessage
+import base64
+import json
+import urllib.request
+from urllib.error import URLError, HTTPError
+
 def send_gmail_pdf(pdf_output, email_address, pdf_filename):
     # --- CONFIGURATION ---
     api_key = os.getenv("MAILJET_API_KEY")
     secret_key = os.getenv("MAILJET_SECRET_KEY")
     sender_email = os.getenv("SENDER_EMAIL")
 
-    # 1. Create the email message
-    msg = EmailMessage()
-    msg['Subject'] = 'Your Generated PDF Set List'
-    msg['From'] = str(sender_email).strip()
-    msg['To'] = email_address
-    msg.set_content('Hello! Please find your Song Set List attached to this email.')
-
-    # 2. Read the PDF from the BytesIO buffer
+    # 1. Read the PDF from the BytesIO buffer and encode to base64
     pdf_output.seek(0)
-    file_data = pdf_output.read()
-        
-    # 3. Attach the PDF
-    msg.add_attachment(
-        file_data, 
-        maintype='application', 
-        subtype='pdf', 
-        filename=pdf_filename
-    )
+    pdf_bytes = pdf_output.read()
+    pdf_base64 = base64.b64encode(pdf_bytes).decode('utf-8')
 
-    # 4. Connect to Mailjet and send it securely
+    # 2. Prepare the Mailjet API payload
+    url = "https://api.mailjet.com/v3.1/send"
+    payload = {
+        "Messages": [
+            {
+                "From": {
+                    "Email": sender_email,
+                    "Name": "Song Set Maker"
+                },
+                "To": [
+                    {
+                        "Email": email_address
+                    }
+                ],
+                "Subject": "Your Generated PDF Set List",
+                "TextPart": "Hello! Please find your Song Set List attached to this email.",
+                "Attachments": [
+                    {
+                        "ContentType": "application/pdf",
+                        "Filename": pdf_filename,
+                        "Base64Content": pdf_base64
+                    }
+                ]
+            }
+        ]
+    }
+    
+    # 3. Create the HTTP request
+    data = json.dumps(payload).encode('utf-8')
+    req = urllib.request.Request(url, data=data)
+    req.add_header('Content-Type', 'application/json')
+    
+    # 4. Add Basic Authentication headers using API & Secret keys
+    if api_key and secret_key:
+        auth_str = f"{api_key}:{secret_key}"
+        b64_auth = base64.b64encode(auth_str.encode('utf-8')).decode('utf-8')
+        req.add_header('Authorization', f'Basic {b64_auth}')
+    else:
+        print("Missing Mailjet API keys in environment variables!")
+        return
+    
+    # 5. Send the request to Mailjet
     try:
-        # Mailjet uses port 465 with SMTP_SSL
-        with smtplib.SMTP_SSL("in-v3.mailjet.com", 465) as server:
-            server.login(str(api_key).strip(), str(secret_key).strip())
-            server.send_message(msg)
-        print("Success! The email has been sent.")
-    except Exception as error:
-        print(f"Something went wrong: {error}")
+        with urllib.request.urlopen(req) as response:
+            print("Success! The email has been sent via Mailjet API.")
+    except HTTPError as e:
+        error_msg = e.read().decode('utf-8')
+        print(f"Mailjet API Error: {e.code} - {error_msg}")
+    except URLError as e:
+        print(f"Failed to reach Mailjet: {e.reason}")
+    except Exception as e:
+        print(f"Something went wrong: {e}")
